@@ -11,7 +11,7 @@ from config import settings
 
 
 def tune_model(model, param_grid, model_name, X_train, y_train):
-    """Tune hyperparameters using GridSearchCV - same as original function."""
+    """Tune hyperparameters using GridSearchCV"""
     if settings.verbose:
         print(f"\nTuning {model_name}...")
 
