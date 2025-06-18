@@ -9,7 +9,7 @@ from config import settings
 
 
 class TextPreprocessor:
-    """Preprocess text data for sentiment analysis."""
+    """Handles text preprocessing and TF-IDF vectorization."""
 
     def __init__(self):
         self.lemmatizer = WordNetLemmatizer()
@@ -18,41 +18,51 @@ class TextPreprocessor:
         self._download_nltk_data()
 
     def _download_nltk_data(self):
-        """Download necessary NLTK data files."""
+        """Download required NLTK data."""
         for resource in settings.text.nltk_downloads:
             nltk.download(resource, quiet=True)
 
-    def preprocess_text(self, text: str) -> str:
-        """Clean and preprocess the text."""
+    def preprocess_text(self, text):
+        """
+        Clean and preprocess text data.
+        Exact same logic as the original preprocess_text function.
+        """
         if not isinstance(text, str):
             return ""
 
+        # Convert to lowercase
         text = text.casefold()
-        text = re.sub(r"<.*?>", "", text)  # Remove HTML tags
-        text = re.sub(r"[^a-zA-Z\s]", "", text)  # Remove non-alphabetic characters
 
-        tokens = word_tokenize(text)  # Tokenize the text
+        # Remove HTML tags
+        text = re.sub(r"<.*?>", "", text)
 
-        tokens = [  # Lemmatize and remove stop words
+        # Remove non-alphabetic characters and keep spaces
+        text = re.sub(r"[^a-zA-Z\s]", "", text)
+
+        # Tokenize text
+        tokens = word_tokenize(text)
+
+        # Remove stopwords and lemmatize
+        tokens = [
             self.lemmatizer.lemmatize(word)
             for word in tokens
             if word not in self.stop_words
         ]
 
+        # Return preprocessed text
         return " ".join(tokens)
 
     def process_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
-        """ "
+        """
         Process all text in dataframe and remove empty results.
         """
-
         if settings.verbose:
-            print("Processing text data...")
+            print("Processing text...")
 
-        # Applying preprocessing
+        # Apply preprocessing
         df["processed_text"] = df["reviewText"].apply(self.preprocess_text)
 
-        # Removing empty reviews after preprocessing
+        # Remove empty reviews after preprocessing
         df_clean = df[df["processed_text"].str.len() > 0].copy()
 
         if settings.verbose:
@@ -60,11 +70,10 @@ class TextPreprocessor:
 
         return df_clean
 
-    def create_tfidf_vectorizer(self, df: pd.DataFrame) -> TfidfVectorizer:
+    def create_tfidf_vectorizer(self):
         """Create TF-IDF vectorizer with settings from config."""
         self.vectorizer = TfidfVectorizer(
-            max_features=settings.text.max_features,
-            stop_words="english",
+            max_features=settings.text.max_features, min_df=settings.text.min_df
         )
         return self.vectorizer
 
