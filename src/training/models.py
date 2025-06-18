@@ -1,6 +1,5 @@
 """
 ML model training with hyperparameter tuning.
-Simple wrapper around your original tuning logic.
 """
 
 from sklearn.model_selection import GridSearchCV
