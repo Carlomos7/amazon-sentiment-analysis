@@ -1,6 +1,7 @@
 import pandas as pd
 import kagglehub
-from kagglehub import KaggleDatasetAdapter
+#from kagglehub import KaggleDatasetAdapter
+from pathlib import Path
 from config import settings
 
 
@@ -13,11 +14,25 @@ class DataLoader:
             print("Loading dataset from Kaggle...")
 
         # Testing the kagglehub pandas adapter
-        df = kagglehub.load_dataset(
-            KaggleDatasetAdapter.PANDAS,
-            settings.kaggle_dataset_path,
-            settings.kaggle_file_path,
-        )
+        # df = kagglehub.load_dataset(
+        #     KaggleDatasetAdapter.PANDAS,
+        #     settings.kaggle_dataset,
+        #     settings.kaggle_file_path,
+        # )
+        # if settings.verbose:
+        #     print(f"Dataset loaded with {len(df)} rows and {len(df.columns)} columns.")
+        # return df
+        path = kagglehub.dataset_download(settings.kaggle_dataset)
+        if settings.verbose:
+            print("Path to dataset files:", path)
+
+        csv_files = list(Path(path).glob("*.csv"))
+        if csv_files:
+            dataset_path = str(csv_files[0])
+            print(f"Found dataset file: {dataset_path}")
+        else:
+            raise FileNotFoundError("Could not find CSV file in the downloaded dataset")
+        df = pd.read_csv(dataset_path)
 
         if settings.verbose:
             print(f"Dataset loaded with {len(df)} rows and {len(df.columns)} columns.")
@@ -44,7 +59,7 @@ class DataLoader:
 
         return df_filtered
 
-    def load_and_filter(self) -> pd.DataFrame:
+    def load_and_prepare(self) -> pd.DataFrame:
         """Load and filter the dataset."""
         df = self.load_dataset()
         df_filtered = self.filter_neutral_reviews(df)
